@@ -49,6 +49,52 @@ Expected shape:
 }
 ```
 
+## Production Health Check
+
+Live Render deployment:
+
+```text
+https://talentloop-sourcing-refinement.onrender.com
+```
+
+Verified health endpoint:
+
+```bash
+curl https://talentloop-sourcing-refinement.onrender.com/api/health
+```
+
+Observed response:
+
+```json
+{
+  "ok": true,
+  "profileCount": 48,
+  "llmProvider": "gemini",
+  "llmConfigured": true
+}
+```
+
+## Production UI Check
+
+Open:
+
+```text
+https://talentloop-sourcing-refinement.onrender.com
+```
+
+Run the demo search:
+
+```text
+RDS developers with 4-7 years of experience who have worked at startups, for a role based in Bangalore.
+```
+
+Observed:
+
+- Search returned 6 objective matches.
+- Ranked profiles rendered with scores and field-backed explanations.
+- Filters and rubric stayed visible on the left.
+- Match/Miss and Freeze controls were available.
+
 ## Happy Path Scenario
 
 Search query:
@@ -87,5 +133,3 @@ Expected:
 - The app shows a readable missing-key error.
 - The frontend does not crash.
 - Restoring the key and restarting recovers normal behavior.
-
-This also satisfies the Loom requirement to show one graceful failure or recovery moment.

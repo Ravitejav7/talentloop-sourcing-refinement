@@ -2,7 +2,13 @@
 
 AI-powered sourcing refinement loop for the Flexiple engineering assignment.
 
-TalentLoop turns a recruiter's free-text hiring requirement into structured filters, a subjective fit rubric, ranked candidate profiles, and an iterative refinement loop driven by recruiter feedback. The product is built as a working recruiter console: clear filters, transparent scoring, evidence-backed explanations, refinement controls, and a frozen final shortlist.
+TalentLoop turns a recruiter's free-text hiring requirement into **structured filters**, a **subjective fit rubric**, **ranked candidate profiles**, and an **iterative refinement loop** driven by recruiter feedback. The product is built as a working recruiter console: clear filters, transparent scoring, evidence-backed explanations, refinement controls, and a frozen final shortlist.
+
+Live demo:
+
+```text
+https://talentloop-sourcing-refinement.onrender.com
+```
 
 | Area | Implementation |
 | --- | --- |
@@ -37,10 +43,10 @@ RDS developers with 4-7 years of experience who have worked at startups, for a r
 This repository implements the requested single-session sourcing loop end to end:
 
 - Free-text role requirement to structured filters and rubric.
-- Real server-side LLM calls, never mocked or canned.
+- **Real server-side LLM calls**, never mocked or canned.
 - Local filtering against the supplied `profiles.json` dataset.
 - LLM scoring and ranking for filtered profiles.
-- Field-backed explanations for why each profile matched.
+- **Field-backed explanations** for why each profile matched.
 - Recruiter refinement through chat feedback and per-profile match/miss controls.
 - Re-running the search after refinement with visible changes.
 - Freeze state showing final filters, rubric, and ranked shortlist.
@@ -140,6 +146,43 @@ Expected health response:
   "llmProvider": "gemini",
   "llmConfigured": true
 }
+```
+
+## Deploy on Render
+
+This repository includes `render.yaml`, so Render can create a Node web service directly from the GitHub repo.
+
+Render settings:
+
+| Setting | Value |
+| --- | --- |
+| Service type | Web Service |
+| Runtime | Node |
+| Build command | `npm ci && npm run build` |
+| Start command | `npm start` |
+| Health check path | `/api/health` |
+| Region | Singapore |
+
+Environment variables:
+
+| Key | Value |
+| --- | --- |
+| `NODE_VERSION` | `22` |
+| `NODE_ENV` | `production` |
+| `LLM_PROVIDER` | `gemini` |
+| `GEMINI_MODEL` | `gemini-3.6-flash` |
+| `GEMINI_API_KEY` | Add in Render dashboard, never commit it |
+
+Live Render deployment:
+
+```text
+https://talentloop-sourcing-refinement.onrender.com
+```
+
+Health check:
+
+```text
+https://talentloop-sourcing-refinement.onrender.com/api/health
 ```
 
 ## Available Scripts
@@ -372,9 +415,11 @@ npm run verify
 Real Gemini verification completed:
 
 - `/api/health` confirmed 48 profiles and configured Gemini provider.
-- `/api/search` returned filters, rubric, 4 objective matches, ranked candidates, and field-backed explanations.
+- `/api/search` returned filters, rubric, 6 objective matches, ranked candidates, and field-backed explanations for the demo query.
 - `/api/refine` updated filters from `AWS RDS` to `AWS RDS + PostgreSQL`, changed `maxYears` from `7` to `6`, explained why, and re-ranked candidates.
 - `/api/freeze` returned a frozen final state.
+- Render deployment verified at `https://talentloop-sourcing-refinement.onrender.com/api/health` with `200 OK`, 48 profiles, and configured Gemini provider.
+- Live Render UI verified at `https://talentloop-sourcing-refinement.onrender.com` with the demo query returning 6 objective matches.
 
 ## Reviewer Walkthrough
 
