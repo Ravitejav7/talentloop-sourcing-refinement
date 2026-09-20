@@ -8,6 +8,7 @@
     "dev:server": "tsx watch server/index.ts",
     "dev:client": "vite --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run build",
     "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",
     "start": "NODE_ENV=production node dist-server/server/index.js"
   },

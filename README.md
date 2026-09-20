@@ -2,7 +2,35 @@
 
 AI-powered sourcing refinement loop for the Flexiple engineering assignment.
 
-TalentLoop turns a recruiter's free-text hiring requirement into structured filters, a subjective fit rubric, ranked candidate profiles, and an iterative refinement loop driven by recruiter feedback.
+TalentLoop turns a recruiter's free-text hiring requirement into structured filters, a subjective fit rubric, ranked candidate profiles, and an iterative refinement loop driven by recruiter feedback. The product is built as a working recruiter console: clear filters, transparent scoring, evidence-backed explanations, refinement controls, and a frozen final shortlist.
+
+| Area | Implementation |
+| --- | --- |
+| LLM calls | Real server-side Gemini calls by default, with an OpenAI-compatible provider interface |
+| Search flow | Requirement extraction, local objective filtering, LLM scoring, refinement, rerun, freeze |
+| Trust signals | Visible filters, visible rubric, field-backed explanations, changed-state summaries |
+| Reliability | API-key checks, timeout handling, malformed JSON handling, provider-error UI |
+| Review assets | Prompt files, architecture notes, verification notes, runnable repository |
+
+## Reviewer Quick Path
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Add a Gemini key in `.env`, then open:
+
+```text
+http://localhost:5173
+```
+
+Use this query:
+
+```text
+RDS developers with 4-7 years of experience who have worked at startups, for a role based in Bangalore.
+```
 
 ## Assignment Coverage
 
@@ -20,9 +48,20 @@ This repository implements the requested single-session sourcing loop end to end
 - Prompts committed in the repository.
 - API keys loaded from environment variables and never exposed to the browser.
 
+## Evaluation Fit
+
+| Flexiple criterion | Where it is addressed |
+| --- | --- |
+| End-to-end loop with real LLM calls | `/api/search`, `/api/refine`, `/api/freeze`, Gemini provider |
+| LLM interaction structure | Dedicated prompt files, provider interface, strict JSON parsing and normalization |
+| State across refinement rounds | Current requirement, filters, rubric, ranked profiles, and recruiter feedback are carried through each refinement |
+| Failure handling | Missing key, timeout, malformed JSON, provider demand/rate errors, empty matches |
+| User clarity and trust | Visible filters/rubric, profile evidence, score reasons, changed-state explanations |
+| Recruiter feedback response | Chat feedback plus per-profile match/miss decisions update the next search round |
+
 ## Demo Flow
 
-Use this sample query for the walkthrough:
+Start with:
 
 ```text
 RDS developers with 4-7 years of experience who have worked at startups, for a role based in Bangalore.
@@ -43,29 +82,29 @@ Expected behavior:
 
 ## Tech Stack
 
-- TypeScript
-- React 19
-- Vite
-- Express
-- Gemini API by default
-- Optional OpenAI provider behind the same interface
-- Local JSON dataset
+| Layer | Choice |
+| --- | --- |
+| Frontend | React 19, Vite, TypeScript |
+| Backend | Express, TypeScript |
+| LLM | Gemini by default, optional OpenAI provider |
+| Data | Local `profiles.json` dataset |
+| Validation | TypeScript check plus production build via `npm run verify` |
 
 ## Quick Start
 
-Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-Create a local environment file:
+2. Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Add a Gemini API key:
+3. Add a Gemini API key:
 
 ```bash
 LLM_PROVIDER=gemini
@@ -74,13 +113,13 @@ GEMINI_MODEL=gemini-3.6-flash
 PORT=3001
 ```
 
-Run the app:
+4. Run the app:
 
 ```bash
 npm run dev
 ```
 
-Open:
+5. Open:
 
 ```text
 http://localhost:5173
@@ -132,33 +171,53 @@ Runs the compiled production server after `npm run build`.
 ## Project Structure
 
 ```text
-src/
-  main.tsx                 Recruiter-facing React app
-  styles.css               UI styling and responsive states
-
-server/
-  index.ts                 Server entrypoint
-  server.ts                Express app composition
-  config/env.ts            Environment and path configuration
-  routes/                  API route definitions
-  controllers/             HTTP request/response layer
-  services/                Sourcing workflow orchestration
-  providers/               Gemini/OpenAI provider adapters
-  repositories/            Profile and prompt loading
-  lib/                     Filtering, scoring, schema helpers
-  types/                   Shared backend domain types
-  utils/                   Error, JSON, and text utilities
-
-prompts/
-  generate-search.md       Free text to filters/rubric
-  score-profiles.md        Profile scoring prompt
-  refine-search.md         Feedback-driven refinement prompt
-
-data/
-  profiles.json            Supplied 48-profile talent dataset
-
-docs/
-  ARCHITECTURE.md          Design notes and tradeoffs
+.
+|-- src/
+|   |-- main.tsx              Recruiter console, stateful sourcing loop UI
+|   |-- styles.css            Responsive layout, loading, error, empty, frozen states
+|   `-- vite-env.d.ts         Vite TypeScript declarations
+|
+|-- server/
+|   |-- index.ts              API entrypoint and process bootstrap
+|   |-- server.ts             Express app composition and middleware
+|   |-- config/
+|   |   `-- env.ts            Environment parsing, defaults, path config
+|   |-- routes/
+|   |   `-- search.routes.ts  HTTP route definitions
+|   |-- controllers/
+|   |   `-- search.controller.ts  HTTP request/response layer
+|   |-- services/
+|   |   `-- search.service.ts  Sourcing workflow orchestration
+|   |-- providers/
+|   |   |-- llm.provider.ts   Provider contract shared by all LLM adapters
+|   |   |-- gemini.provider.ts
+|   |   `-- openai.provider.ts
+|   |-- repositories/
+|   |   |-- profile.repository.ts
+|   |   `-- prompt.repository.ts
+|   |-- lib/
+|   |   |-- filter-engine.ts  Objective profile filtering
+|   |   |-- scoring.ts        Deterministic fallback scoring/explanations
+|   |   |-- schema.ts         Filter/rubric normalization
+|   |   `-- profile-presenter.ts
+|   |-- types/
+|   |   `-- domain.ts         Shared backend domain types
+|   `-- utils/
+|       |-- app-error.ts      Typed operational errors
+|       |-- json.ts           LLM JSON extraction/parsing helpers
+|       `-- text.ts           Text normalization helpers
+|
+|-- prompts/
+|   |-- generate-search.md    Free-text requirement to filters/rubric
+|   |-- score-profiles.md     Candidate scoring prompt
+|   `-- refine-search.md      Feedback-driven refinement prompt
+|
+|-- data/
+|   `-- profiles.json         Supplied 48-profile talent dataset
+|
+`-- docs/
+    |-- ARCHITECTURE.md       Design notes and tradeoffs
+    `-- VERIFICATION.md       Manual and automated verification notes
 ```
 
 ## API Endpoints
@@ -305,9 +364,10 @@ These were cut because the assignment explicitly asks for one focused search ses
 The following checks were run successfully:
 
 ```bash
-npm run typecheck
-npm run build
+npm run verify
 ```
+
+`npm run verify` runs TypeScript checking and the full production build. A fuller verification checklist is available in `docs/VERIFICATION.md`.
 
 Real Gemini verification completed:
 
@@ -316,54 +376,17 @@ Real Gemini verification completed:
 - `/api/refine` updated filters from `AWS RDS` to `AWS RDS + PostgreSQL`, changed `maxYears` from `7` to `6`, explained why, and re-ranked candidates.
 - `/api/freeze` returned a frozen final state.
 
-## Source Control Notes
+## Reviewer Walkthrough
 
-This project has its own `.git` repository. Generated and local-only files are ignored:
+For a quick review, run the app and use the demo query from the top of this README.
 
-- `.env`
-- `node_modules/`
-- `dist/`
-- `dist-server/`
-- `.venv/`
+Suggested review path:
 
-If VS Code shows thousands of unrelated files, open this folder directly:
-
-```text
-/Users/balakrishnasai/Documents/Flexiple_project
-```
-
-Do not open `/Users/balakrishnasai` as the workspace root.
-
-## Loom Walkthrough Checklist
-
-Show the following in under 15 minutes:
-
-1. Start with the free-text RDS/startup/Bangalore query.
+1. Start a search with the free-text RDS/startup/Bangalore query.
 2. Show generated filters and rubric.
 3. Show ranked profiles with field-backed explanations.
-4. Give feedback such as preferring PostgreSQL-heavy profiles and lowering seniority.
-5. Show what changed in filters/rubric and the updated ranking.
-6. Show one handled failure or recovery moment, such as a temporary LLM error or missing API key.
-7. Freeze the final search.
+4. Add refinement feedback that prefers PostgreSQL-heavy profiles and lowers seniority.
+5. Compare the changed filters, changed rubric, and updated ranking.
+6. Freeze the search to inspect the final recruiter-ready shortlist.
 
-## Submission Checklist
-
-Before submitting:
-
-```bash
-npm install
-npm run typecheck
-npm run build
-git status
-```
-
-Then commit and push:
-
-```bash
-git add .
-git commit -m "Build TalentLoop sourcing refinement loop"
-git remote add origin <your-github-repo-url>
-git push -u origin main
-```
-
-Do not commit `.env`.
+The UI also includes readable empty, loading, frozen, and provider-error states so the loop stays understandable when the model is slow, temporarily unavailable, or returns invalid output.
